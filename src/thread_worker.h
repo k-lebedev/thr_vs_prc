@@ -6,8 +6,8 @@
 
 class ThreadWorker : public IWorker {
 public:
-    ThreadWorker();
-    ~ThreadWorker();
+    explicit ThreadWorker(const WorkerParams &p);
+    ~ThreadWorker() override;
 private:
     pthread_t m_thread;
 };

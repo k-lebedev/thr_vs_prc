@@ -6,8 +6,8 @@
 
 class ProcessWorker : public IWorker {
 public:
-    ProcessWorker();
-    ~ProcessWorker();
+    explicit ProcessWorker(const WorkerParams &p);
+    ~ProcessWorker() override;
 private:
     pid_t m_pid;
 };
