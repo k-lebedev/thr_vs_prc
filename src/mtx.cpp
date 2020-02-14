@@ -1,10 +1,12 @@
 #include <cassert>
 #include <random>
 #include <stdexcept>
-#include <unistd.h>
+#ifdef USE_SHM
 #include <sys/shm.h>
 #include <sys/stat.h>
-
+#else
+#include <sys/mman.h>
+#endif
 
 #define _LOG_SRC "MTX"
 #include "log.h"
@@ -53,6 +55,8 @@ void mtxmul_square(const int64_t * __restrict a,
     }
 }
 
+#ifdef USE_SHM
+
 SharedMem::SharedMem(size_t size) : m_size(size), m_shmid(-1), m_addr((void *)-1) {
     m_shmid = shmget(IPC_PRIVATE, size, IPC_CREAT | IPC_EXCL | S_IWUSR | S_IRUSR);
     if (m_shmid == -1) {
@@ -93,6 +97,41 @@ void SharedMem::Detach() noexcept {
         }
     }
 }
+
+#else
+
+SharedMem::SharedMem(size_t size) : m_size(size), m_shmid(-1), m_addr(MAP_FAILED) {
+}
+
+SharedMem::~SharedMem() {
+    Detach();
+}
+
+void *SharedMem::Attach() {
+    // значение адреса нам не важно, поэтому аргумент addr = NULL
+    m_addr = mmap(NULL, m_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+    if (m_addr == MAP_FAILED) {
+        _LOG_ERROR_ERRNO("mmap() failed");
+        throw std::runtime_error("mmap() failed");
+    }
+    _LOG_TRACE("shared memory segment attached to addr `%p`", m_addr);
+    // заметим, что после fork() m_addr продолжить существовать в дочернем процессе,
+    // и он останется разделяемым с родителем (т.е. запись в него со стороны предка будет видна со стороны родителя)
+    return m_addr;
+}
+
+void SharedMem::Detach() noexcept {
+    if (m_addr != MAP_FAILED) {
+        if (munmap(m_addr, m_size) == -1) {
+            _LOG_ERROR_ERRNO("shmdt() failed");
+        } else {
+            _LOG_TRACE("shared memory segment detached from addr `%p`", m_addr);
+            m_addr = (void *)-1;
+        }
+    }
+}
+
+#endif
 
 SquareMtx::SquareMtx(size_t size) :m_ptr(nullptr), m_size(size), m_shmem(size*size*sizeof(int64_t)) {
     m_ptr = static_cast<int64_t*>(m_shmem.Attach());
