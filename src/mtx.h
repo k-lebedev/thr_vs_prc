@@ -11,7 +11,9 @@ public:
     void Detach() noexcept;
 private:
     size_t  m_size;
+#ifdef USE_SYSV_SHM
     int     m_shmid;
+#endif
     void   *m_addr;
 };
 

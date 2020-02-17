@@ -1,7 +1,7 @@
 #include <cassert>
 #include <random>
 #include <stdexcept>
-#ifdef USE_SHM
+#ifdef USE_SYSV_SHM
 #include <sys/shm.h>
 #include <sys/stat.h>
 #else
@@ -55,7 +55,7 @@ void mtxmul_square(const int64_t * __restrict a,
     }
 }
 
-#ifdef USE_SHM
+#ifdef USE_SYSV_SHM
 
 SharedMem::SharedMem(size_t size) : m_size(size), m_shmid(-1), m_addr((void *)-1) {
     m_shmid = shmget(IPC_PRIVATE, size, IPC_CREAT | IPC_EXCL | S_IWUSR | S_IRUSR);
@@ -100,7 +100,7 @@ void SharedMem::Detach() noexcept {
 
 #else
 
-SharedMem::SharedMem(size_t size) : m_size(size), m_shmid(-1), m_addr(MAP_FAILED) {
+SharedMem::SharedMem(size_t size) : m_size(size), m_addr(MAP_FAILED) {
 }
 
 SharedMem::~SharedMem() {

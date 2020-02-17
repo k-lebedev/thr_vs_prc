@@ -4,3 +4,6 @@ target_link_libraries(thr_vs_prc sub::cos_log pthread)
 set_target_properties(thr_vs_prc
                       PROPERTIES
                       RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+if (USE_SYSV_SHM)
+    target_compile_definitions(thr_vs_prc PRIVATE -DUSE_SYSV_SHM=1)
+endif(USE_SYSV_SHM)
