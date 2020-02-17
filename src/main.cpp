@@ -85,17 +85,19 @@ int main(int argc, const char **argv) {
 
         // посчитаем произведение матриц в одном потоке для контроля правильности
         _LOG_TRACE("single thread/process calculating...");
-        auto start = std::chrono::steady_clock::now();
+        const auto start_single = std::chrono::steady_clock::now();
         a.mul(b, d, 1, 0);
-        auto end = std::chrono::steady_clock::now();
-        _LOG_INFO("Finished. Elapsed time = %zu ms",
-                  std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+        const auto end_single = std::chrono::steady_clock::now();
+        const auto single_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_single - start_single).count();
+        _LOG_INFO("Finished. Elapsed time = %zu ms", single_ms);
         _LOG_INFO("multiple thread/process calculating...");
-        start = std::chrono::steady_clock::now();
+        const auto start_multi = std::chrono::steady_clock::now();
         process(a, b, c, num_workers, woker_type);
-        end = std::chrono::steady_clock::now();
-        _LOG_INFO("Finished. Elapsed time = %zu ms",
-                  std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+        const auto end_multi = std::chrono::steady_clock::now();
+        const auto multi_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_multi - start_multi).count();
+        _LOG_INFO("Finished. Elapsed time = %zu ms, ratio single/multi = %f",
+                  multi_ms,
+                  (float)single_ms/(float)multi_ms);
         if (!c.is_equal(d)) {
             _LOG_ERROR("matrices are not equal");
         }
