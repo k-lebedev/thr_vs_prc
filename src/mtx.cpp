@@ -24,7 +24,14 @@ void get_indexes(size_t              mtx_size,
     *start_row = 0;
     *end_row = 0;
     if ((mtx_size == 0) || (num_workers == 0)) return;
-    size_t rows_per_worker = mtx_size / num_workers;
+    size_t rows_per_worker = 1;
+    // отдельно обработаем ситуацию, когда обработчиков больше чем строк в матрице
+    if (num_workers <= mtx_size) {
+        rows_per_worker = mtx_size / num_workers;
+    } else {
+        // крайние обработчики не делают ничего (диапазон строк для них пуст)
+        if (worker_idx >= mtx_size) return;
+    }
     // не последний воркер (последнему достаётся больше всех если не делится нацело)
     if (worker_idx != (num_workers - 1)) {
         *start_row = worker_idx*rows_per_worker;
