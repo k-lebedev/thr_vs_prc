@@ -109,6 +109,7 @@ SharedMem::~SharedMem() {
 
 void *SharedMem::Attach() {
     // значение адреса нам не важно, поэтому аргумент addr = NULL
+    // тут обязательно MAP_SHARED (с MAP_PRIVATE запись в этот сегмент не будет видна другими процессами {copy on write})
     m_addr = mmap(NULL, m_size, PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0);
     if (m_addr == MAP_FAILED) {
         _LOG_ERROR_ERRNO("mmap() failed");
